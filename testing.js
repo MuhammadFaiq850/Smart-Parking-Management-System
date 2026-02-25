@@ -1,12 +1,9 @@
 // Implementing Vehicle report generation using dummy data
 
 const vehicle = {
-  // now: new Date(),
   plate_no: "LEO1015",
   vehicle_type: "Bike",
-  //  timming: [{entry_time: this.now ,
-  //             exit_time: new Date(2026,2,26,12,0)
-  //  }],
+  // entry_time: +new Date(2026, 1, 26, 6, 44),
   entry_time: +new Date(),
   exit_time: +new Date(2026, 1, 26, 12, 0),
   fee: 0,
@@ -14,6 +11,8 @@ const vehicle = {
   currently_parked: false,
   total_revenue: 0,
 };
+
+// Parking Rules Configuration
 
 const rules = {
   currency: "PKR",
@@ -31,28 +30,9 @@ const rules = {
   },
 };
 
-// let time = new Date();
-// console.log(time);
-// console.log(new Date(2026, 1, 26, 12, 0));
-
-// console.log(vehicle.entry_time);
-// // console.log(vehicle.entry_time.getTime());
-// // console.log(vehicle.now);
-// console.log(vehicle.exit_time);
-// // console.log((vehicle.exit_time-vehicle.entry_time).getHours());
-
-// let duration = vehicle.exit_time-vehicle.entry_time;
-// console.log(duration/(1000*86400));
-
-// const {entry_time, exit_time } = vehicle;
-// const entry_time = vehicle.entry_time;
-// const exit_time = vehicle.exit_time;
-
-// console.log(entry_time);
-// console.log(exit_time);
+// Generatig Reciepts
 
 function receiptGeneration(vehicle, rules) {
-
   //Destructuring vehicle and rules
   const { plate_no, entry_time, exit_time, vehicle_type } = vehicle;
   const {
@@ -63,31 +43,55 @@ function receiptGeneration(vehicle, rules) {
   } = rules;
 
   //Calculating Duration
-  const duration = Math.round((exit_time - entry_time) / (1000 * 60 * 60));
+  const totalDuration_m = Math.round((exit_time - entry_time) / (1000 * 60));
+  const hours = Math.floor(totalDuration_m / 60);
+  const mins = totalDuration_m - hours * 60;
+  let totalDuration = [hours, mins];
 
-  // Calculating Final fee
-  const bill = (vehicle_type) => {
+  console.log(totalDuration);
+  console.log(totalDuration_m);
+
+  // Calculating Final fee with grace minutes and price cap
+  const bill = (vehicle_type, totalDuration) => {
     if (vehicle_type == "Bike") {
-      return bike_rate * duration > bike_cap ? bike_cap : bike_rate * duration;
+
+      //Bike total fee with grace minutes and price cap
+      const bike_bill =
+        totalDuration[1] <= 15
+          ? bike_rate * totalDuration[0]
+          : bike_rate * (totalDuration[0] + 1); 
+      return bike_bill > bike_cap ? bike_cap : bike_bill;
+
+      //Car total fee with grace minutes and price cap
     } else if (vehicle_type == "Car") {
-      return car_rate * duration > car_cap ? car_cap : car_rate * duration;
+      const car_bill =
+        totalDuration[1] <= 15
+          ? car_rate * totalDuration[0]
+          : car_rate * (totalDuration[0] + 1); 
+      return car_bill > car_cap ? car_cap : car_bill;
+
+      //Truck total fee with grace minutes and price cap
     } else if (vehicle_type == "Truck") {
-      return truck_rate * duration > truck_cap
-        ? truck_cap
-        : truck_rate * duration;
+      const truck_bill =
+        totalDuration[1] <= 15
+          ? truck_rate * totalDuration[0]
+          : truck_rate * (totalDuration[0] + 1); 
+      return truck_bill > truck_cap ? truck_cap : truck_bill;
     }
   };
-  const final_fee = bill(vehicle_type);
-  
+  const final_fee = bill(vehicle_type, totalDuration);
+
   // Exiting Reciept
   const receipt = {
     plate_no: plate_no,
-    entry_time: new Date (entry_time),
-    exit_time: new Date (exit_time),
-    total_duration: duration, // hours
+    entry_time: new Date(entry_time),
+    exit_time: new Date(exit_time),
+    total_duration: totalDuration, // hours and minutes
     final_fee: final_fee,
   };
   console.log(receipt);
 }
 
 receiptGeneration(vehicle, rules);
+
+
