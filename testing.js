@@ -53,20 +53,41 @@ const rules = {
 
 function receiptGeneration(vehicle, rules) {
 
-  const{plate_no, entry_time, exit_time} = vehicle;
-  const duration = Math.round((exit_time-entry_time)/(1000*60*60));
+  //Destructuring vehicle and rules
+  const { plate_no, entry_time, exit_time, vehicle_type } = vehicle;
+  const {
+    lostTicketFine,
+    graceMinutes,
+    hourlyRates: { Car: car_rate, Bike: bike_rate, Truck: truck_rate },
+    dailyCaps: { Car: car_cap, Bike: bike_cap, Truck: truck_cap },
+  } = rules;
 
+  //Calculating Duration
+  const duration = Math.round((exit_time - entry_time) / (1000 * 60 * 60));
 
+  // Calculating Final fee
+  const bill = (vehicle_type) => {
+    if (vehicle_type == "Bike") {
+      return bike_rate * duration > bike_cap ? bike_cap : bike_rate * duration;
+    } else if (vehicle_type == "Car") {
+      return car_rate * duration > car_cap ? car_cap : car_rate * duration;
+    } else if (vehicle_type == "Truck") {
+      return truck_rate * duration > truck_cap
+        ? truck_cap
+        : truck_rate * duration;
+    }
+  };
+  const final_fee = bill(vehicle_type);
+  
+  // Exiting Reciept
   const receipt = {
     plate_no: plate_no,
-    entry_time: entry_time,
-    exit_time: exit_time,
+    entry_time: new Date (entry_time),
+    exit_time: new Date (exit_time),
     total_duration: duration, // hours
-    final_fee: 0,
+    final_fee: final_fee,
   };
   console.log(receipt);
 }
 
 receiptGeneration(vehicle, rules);
-
-
