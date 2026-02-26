@@ -36,27 +36,33 @@ class Records {
 
     //Exit Vehicle
     this.exit = (plate_no) => {
-      records.forEach((record) => {
-        if (record.plate_no === plate_no) {
+        
+      if (!records.some((curr) => curr.plate_no == plate_no)) {
+        summary.allViolations.push(`No Record Exit Violation: ${plate_no}`);
+      } 
+      
+      else {
+        records.forEach((record) => {
+          if (record.plate_no === plate_no) {
+            record.exit_time = +new Date(2026, 1, 27, 12, 0); // Tommorow's Date for testing
+            const receipt = receiptGeneration(record, rules); //Generate Receipt
 
-          record.exit_time = +new Date(2026, 1, 27, 12, 0); // Tommorow's Date for testing
-          const receipt = receiptGeneration(record, rules); //Generate Receipt
+            if (record.ticketViolation) {
+              record.fee = 0; //Update fee in records
+              handleTicketViolation(plate_no);
+            } else {
+              //   record.exit_time = +new Date();
+              record.currently_parked = false;
+              console.log(receipt);
+              // finance.totalRevenue += receipt.final_fee;
+              record.fee = receipt.final_fee; //Update fee in records
+            }
 
-          if (record.ticketViolation) {
-            record.fee = 0; //Update fee in records
-            handleTicketViolation(plate_no);
-          } else {
-            //   record.exit_time = +new Date();
-            record.currently_parked = false;
-            console.log(receipt);
-            // finance.totalRevenue += receipt.final_fee;
-            record.fee = receipt.final_fee; //Update fee in records
+            //Update total revenue in summary
+            summary.totalRevenue = calculateRevenue(); //Update total revenue in summary
           }
-
-          //Update total revenue in summary
-          summary.totalRevenue = calculateRevenue(); //Update total revenue in summary
-        }
-      });
+        });
+      }
     };
 
     //Report Lost Ticket
@@ -64,15 +70,16 @@ class Records {
       records.forEach((record) => {
         if (record.plate_no === plate_no) {
           record.ticketViolation = true;
+          summary.allViolations.push(`Ticket Lost Violation: ${plate_no}`);
         }
       });
     };
 
-    //Ticket Violation
+    //Handle Ticket Violation
     function handleTicketViolation(plate_no) {
       records.forEach((record) => {
         if (record.plate_no === plate_no) {
-          record.ticketViolationFee = rules.lostTicketFine;
+          record.ticketViolationFee = rules.lostTicketFine; // Apply fine for ticket lost
         }
       });
     }
@@ -201,13 +208,15 @@ class Records {
 }
 
 const vehicleRecord = new Records();
-vehicleRecord.enter("LEO 1015", "Bike");
-vehicleRecord.enter("LEX 7749", "Car");
+vehicleRecord.enter("LEO-1015", "Bike");
+vehicleRecord.enter("LEX-7749", "Car");
 console.log(vehicleRecord.listRecords());
 
-vehicleRecord.reportTicketLost("LEO 1015");
-vehicleRecord.exit("LEO 1015");
-vehicleRecord.exit("LEX 7749");
+vehicleRecord.reportTicketLost("LEO-1015");
+// vehicleRecord.reportTicketLost("LEX 7749");
+vehicleRecord.exit("LEO-1015");
+vehicleRecord.exit("LEX-7749");
+vehicleRecord.exit("ABC-1234");
 console.log(vehicleRecord.listRecords());
 console.log(vehicleRecord.listSummary());
 
