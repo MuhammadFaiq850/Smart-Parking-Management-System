@@ -6,7 +6,7 @@ class Records {
       totalVehiclesParked: 0,
       vehiclesParked: { Bike: 0, Car: 0, Truck: 0 },
       totalRevenue: 0,
-      topVehicles: [], //{plate_no., vehicle_type, payment_amount}
+      revenuePerVehicle: null,
       allViolations: [],
     };
 
@@ -36,12 +36,9 @@ class Records {
 
     //Exit Vehicle
     this.exit = (plate_no) => {
-        
       if (!records.some((curr) => curr.plate_no == plate_no)) {
         summary.allViolations.push(`No Record Exit Violation: ${plate_no}`);
-      } 
-      
-      else {
+      } else {
         records.forEach((record) => {
           if (record.plate_no === plate_no) {
             record.exit_time = +new Date(2026, 1, 27, 12, 0); // Tommorow's Date for testing
@@ -56,9 +53,10 @@ class Records {
               console.log(receipt);
               // finance.totalRevenue += receipt.final_fee;
               record.fee = receipt.final_fee; //Update fee in records
+                
             }
 
-            //Update total revenue in summary
+            summary.revenuePerVehicle = revenuePerVehicle(); // Update revenue per vehicle in summary 
             summary.totalRevenue = calculateRevenue(); //Update total revenue in summary
           }
         });
@@ -90,6 +88,29 @@ class Records {
         return acc + curr.fee + curr.ticketViolationFee;
       }, 0);
       return totalRevenue;
+    }
+
+    function revenuePerVehicle() {
+      // add this function after exit
+      let vehicleRevenue = {
+        bikesRevenue: 0,
+        carsRevenue: 0,
+        trucksRevenue: 0,
+      };
+      const Bikes = records.filter((record) => record.vehicle_type == "Bike");
+      const Cars = records.filter((record) => record.vehicle_type == "Car");
+      const Trucks = records.filter((record) => record.vehicle_type == "Truck");
+
+      vehicleRevenue.bikesRevenue = Bikes.reduce((acc, curr) => {
+        return acc + curr.fee + curr.ticketViolationFee;
+      }, 0);
+      vehicleRevenue.carsRevenue = Cars.reduce((acc, curr) => {
+        return acc + curr.fee + curr.ticketViolationFee;
+      }, 0);
+      vehicleRevenue.trucksRevenue = Trucks.reduce((acc, curr) => {
+        return acc + curr.fee + curr.ticketViolationFee;
+      }, 0);
+      return vehicleRevenue;
     }
 
     //Vehicle Calculation
@@ -217,7 +238,9 @@ vehicleRecord.reportTicketLost("LEO-1015");
 vehicleRecord.exit("LEO-1015");
 vehicleRecord.exit("LEX-7749");
 vehicleRecord.exit("ABC-1234");
+console.log("********RECORDS********");
 console.log(vehicleRecord.listRecords());
+console.log("********SUMMARY********");
 console.log(vehicleRecord.listSummary());
 
 // const vehicle = {
