@@ -5,11 +5,9 @@ const vehicle = {
   vehicle_type: "Bike",
   // entry_time: +new Date(2026, 1, 26, 6, 44),
   entry_time: +new Date(),
-  exit_time: +new Date(2026, 1, 26, 12, 0),
-  fee: 0,
-  park_history: [{ amount: 10, exit_time: this.exit_time }],
-  currently_parked: false,
-  total_revenue: 0,
+  exit_time: +new Date(2026, 1, 27, 12, 0),
+  currently_parked: true,
+  // total_revenue: 0,
 };
 
 // Parking Rules Configuration
