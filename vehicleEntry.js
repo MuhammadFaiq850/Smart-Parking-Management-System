@@ -2,13 +2,10 @@ class Records {
   constructor() {
     let records = [];
 
-    let finance = {
-      totalRevenue: 0,
-    };
-
     let summary = {
       totalVehiclesParked: 0,
       vehiclesParked: { Bike: 0, Car: 0, Truck: 0 },
+      totalRevenue: 0,
       topVehicles: [], //{plate_no., vehicle_type, payment_amount}
       allViolations: [],
     };
@@ -31,31 +28,66 @@ class Records {
     };
 
     //Enter Vehicle
-    this.enter = (plate_no, vehicle_type)=>{
-        createRecord(plate_no, vehicle_type);
-        const calculated = calculateVehicles();
-        updateSummary(calculated);
-    }
+    this.enter = (plate_no, vehicle_type) => {
+      createRecord(plate_no, vehicle_type);
+      const calculated = calculateVehicles();
+      updateSummary(calculated);
+    };
 
     //Exit Vehicle
     this.exit = (plate_no) => {
       records.forEach((record) => {
         if (record.plate_no === plate_no) {
-          //   record.exit_time = +new Date();
-          ((record.exit_time = +new Date(2026, 1, 27, 12, 0)), // Tommorow's Date for testing
-            (record.currently_parked = false));
-          const receipt = receiptGeneration(record, rules);
-          console.log(receipt);
-          record.fee = receipt.final_fee;
-          finance.totalRevenue += receipt.final_fee;
+
+          record.exit_time = +new Date(2026, 1, 27, 12, 0); // Tommorow's Date for testing
+          const receipt = receiptGeneration(record, rules); //Generate Receipt
+
+          if (record.ticketViolation) {
+            record.fee = 0; //Update fee in records
+            handleTicketViolation(plate_no);
+          } else {
+            //   record.exit_time = +new Date();
+            record.currently_parked = false;
+            console.log(receipt);
+            // finance.totalRevenue += receipt.final_fee;
+            record.fee = receipt.final_fee; //Update fee in records
+          }
+
+          //Update total revenue in summary
+          summary.totalRevenue = calculateRevenue(); //Update total revenue in summary
         }
       });
     };
 
+    //Report Lost Ticket
+    this.reportTicketLost = function (plate_no) {
+      records.forEach((record) => {
+        if (record.plate_no === plate_no) {
+          record.ticketViolation = true;
+        }
+      });
+    };
+
+    //Ticket Violation
+    function handleTicketViolation(plate_no) {
+      records.forEach((record) => {
+        if (record.plate_no === plate_no) {
+          record.ticketViolationFee = rules.lostTicketFine;
+        }
+      });
+    }
+
+    //Revenue Calcultaion
+    function calculateRevenue() {
+      const totalRevenue = records.reduce((acc, curr) => {
+        return acc + curr.fee + curr.ticketViolationFee;
+      }, 0);
+      return totalRevenue;
+    }
+
     //Vehicle Calculation
     function calculateVehicles() {
-
-      let vehicles = {bike:0, car:0, truck:0, totalVehiclesParked:0}
+      let vehicles = { bike: 0, car: 0, truck: 0, totalVehiclesParked: 0 };
       records.forEach((record) => {
         record.vehicle_type == "Bike" && record.currently_parked
           ? ++vehicles.bike
@@ -67,17 +99,18 @@ class Records {
           ? ++vehicles.truck
           : vehicles.truck + 0;
       });
-        vehicles.totalVehiclesParked = vehicles.bike + vehicles.car + vehicles.truck;
-        return vehicles;
-    };
+      vehicles.totalVehiclesParked =
+        vehicles.bike + vehicles.car + vehicles.truck;
+      return vehicles;
+    }
 
     // Update Summary
 
-    function updateSummary(vehicles){
-        summary.totalVehiclesParked = vehicles.totalVehiclesParked;
-        summary.vehiclesParked.Bike = vehicles.bike;
-        summary.vehiclesParked.Car = vehicles.car;
-        summary.vehiclesParked.Truck = vehicles.truck;
+    function updateSummary(vehicles) {
+      summary.totalVehiclesParked = vehicles.totalVehiclesParked;
+      summary.vehiclesParked.Bike = vehicles.bike;
+      summary.vehiclesParked.Car = vehicles.car;
+      summary.vehiclesParked.Truck = vehicles.truck;
     }
 
     //Create record for Vehicle entry
@@ -89,20 +122,16 @@ class Records {
         exit_time: null,
         currently_parked: true,
         fee: 0,
+        ticketViolation: false,
+        ticketViolationFee: 0,
       };
 
       records.push(record);
-
-    };
+    }
 
     //List all Records
     this.listRecords = function () {
       return records;
-    };
-
-    // List Financial record
-    this.listFinance = function () {
-      return finance;
     };
 
     // List Summary
@@ -176,10 +205,10 @@ vehicleRecord.enter("LEO 1015", "Bike");
 vehicleRecord.enter("LEX 7749", "Car");
 console.log(vehicleRecord.listRecords());
 
+vehicleRecord.reportTicketLost("LEO 1015");
 vehicleRecord.exit("LEO 1015");
 vehicleRecord.exit("LEX 7749");
 console.log(vehicleRecord.listRecords());
-console.log(vehicleRecord.listFinance());
 console.log(vehicleRecord.listSummary());
 
 // const vehicle = {
