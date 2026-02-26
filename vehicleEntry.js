@@ -29,9 +29,19 @@ class Records {
 
     //Enter Vehicle
     this.enter = (plate_no, vehicle_type) => {
-      createRecord(plate_no, vehicle_type);
-      const calculated = calculateVehicles();
-      updateSummary(calculated);
+        // Check for Duplicate Entry
+      if (
+        records.some(
+          (curr) => curr.plate_no == plate_no && curr.currently_parked,
+        )
+      ) {
+        summary.allViolations.push(`Duplicate Entry Violation: ${plate_no}`);
+      } 
+      else {
+        createRecord(plate_no, vehicle_type);
+        const calculated = calculateVehicles();
+        updateSummary(calculated);
+      }
     };
 
     //Exit Vehicle
@@ -41,22 +51,23 @@ class Records {
       } else {
         records.forEach((record) => {
           if (record.plate_no === plate_no) {
-            record.exit_time = +new Date(2026, 1, 27, 12, 0); // Tommorow's Date for testing
+            record.exit_time = new Date(2026, 1, 27, 12, 0); // Tommorow's Date for testing
             const receipt = receiptGeneration(record, rules); //Generate Receipt
 
             if (record.ticketViolation) {
               record.fee = 0; //Update fee in records
               handleTicketViolation(plate_no);
+              record.currently_parked = false;
             } else {
               //   record.exit_time = +new Date();
               record.currently_parked = false;
+              console.log("********RECEIPT*******");
               console.log(receipt);
               // finance.totalRevenue += receipt.final_fee;
               record.fee = receipt.final_fee; //Update fee in records
-                
             }
 
-            summary.revenuePerVehicle = revenuePerVehicle(); // Update revenue per vehicle in summary 
+            summary.revenuePerVehicle = revenuePerVehicle(); // Update revenue per vehicle in summary
             summary.totalRevenue = calculateRevenue(); //Update total revenue in summary
           }
         });
@@ -146,7 +157,7 @@ class Records {
       const record = {
         plate_no: plate_no,
         vehicle_type: vehicle_type,
-        entry_time: +new Date(),
+        entry_time: new Date(),
         exit_time: null,
         currently_parked: true,
         fee: 0,
@@ -179,7 +190,7 @@ class Records {
 
       //Calculating Duration
       const totalDuration_m = Math.round(
-        (exit_time - entry_time) / (1000 * 60),
+        (+exit_time - +entry_time) / (1000 * 60),
       );
       const hours = Math.floor(totalDuration_m / 60);
       const mins = totalDuration_m - hours * 60;
@@ -190,7 +201,7 @@ class Records {
         if (vehicle_type == "Bike") {
           //Bike total fee with grace minutes and price cap
           const bike_bill =
-            totalDuration[1] <= 15
+            totalDuration[1] <= graceMinutes
               ? bike_rate * totalDuration[0]
               : bike_rate * (totalDuration[0] + 1);
           return bike_bill > bike_cap ? bike_cap : bike_bill;
@@ -221,6 +232,7 @@ class Records {
         exit_time: new Date(exit_time),
         total_duration: totalDuration, // hours and minutes
         final_fee: final_fee,
+        calculationSteps: "Fee = (Parking Duration) X (Hourly Rate)",
       };
 
       return receipt;
@@ -229,6 +241,7 @@ class Records {
 }
 
 const vehicleRecord = new Records();
+vehicleRecord.enter("LEO-1015", "Bike");
 vehicleRecord.enter("LEO-1015", "Bike");
 vehicleRecord.enter("LEX-7749", "Car");
 console.log(vehicleRecord.listRecords());
