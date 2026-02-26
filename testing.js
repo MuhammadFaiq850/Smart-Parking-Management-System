@@ -90,6 +90,46 @@ function receiptGeneration(vehicle, rules) {
   console.log(receipt);
 }
 
-receiptGeneration(vehicle, rules);
+// receiptGeneration(vehicle, rules);
 
 
+
+
+let records = [
+  {
+    plate_no: 'LEO 1015',
+    vehicle_type: 'Bike',
+    entry_time: 1772078733082,
+    exit_time: null,
+    currently_parked: true,
+    fee: 0
+  },
+  {
+    plate_no: 'LEX 7749',
+    vehicle_type: 'Car',
+    entry_time: 1772078733082,
+    exit_time: null,
+    currently_parked: true,
+    fee: 0
+  }
+]
+
+    function calculateVehicles(records) {
+
+      let vehicles = {bike:0, car:0, truck:0, totalVehiclesParked:0}
+      records.forEach((record) => {
+        record.vehicle_type == "Bike" && record.currently_parked
+          ? ++vehicles.bike
+          : vehicles.bike + 0;
+        record.vehicle_type == "Car" && record.currently_parked
+          ? ++vehicles.car
+          : vehicles.car + 0;
+        record.vehicle_type == "Truck" && record.currently_parked
+          ? ++vehicles.truck
+          : vehicles.truck + 0;
+      });
+        vehicles.totalVehiclesParked = vehicles.bike + vehicles.car + vehicles.truck;
+        return vehicles;
+    };
+
+console.log(calculateVehicles(records)); 
