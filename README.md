@@ -16,5 +16,6 @@ To get started with this project:
 
 The user can also report ticket lost using the reportTicketLost() method.
 
-### Note: The testing.js file is only for testing chunks of during development. All the code of working project in inside vehicleEntry.js
+#### Note:  The testing.js file is only for testing chunks of during development. All the code of working project in inside vehicleEntry.js
+
 
