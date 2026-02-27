@@ -18,12 +18,14 @@ class Records {
         Car: 100,
         Bike: 50,
         Truck: 200,
+        Rickshaw: 0
       },
       graceMinutes: 15,
       dailyCaps: {
         Car: 800,
         Bike: 400,
         Truck: 1500,
+        Rickshaw: 0
       },
     };
 
@@ -47,7 +49,7 @@ class Records {
     };
 
     //Exit Vehicle
-    this.exit = (plate_no) => {
+    this.exit = (plate_no, vehicle_type) => {
       if (!records.some((curr) => curr.plate_no == plate_no)) {
         summary.allViolations.push(`No Record Exit Violation: ${plate_no}`);
       } else {
@@ -72,6 +74,7 @@ class Records {
             summary.revenuePerVehicle = revenuePerVehicle(); // Update revenue per vehicle in summary
             summary.totalRevenue = calculateRevenue(); //Update total revenue in summary
             summary.totalVehiclesParked -= 1;
+            summary.vehiclesParked[vehicle_type] -= 1;
           }
         });
       }
@@ -148,7 +151,6 @@ class Records {
     // Update Summary
 
     function updateSummaryOnEntry(vehicleCount) {
-      console.log(vehicleCount);
       summary.totalVehiclesParked = vehicleCount[0];
       let vehiclesParked = vehicles.reduce((acc, curr) => {
         acc[curr] = 0;
@@ -235,20 +237,20 @@ class Records {
 }
 
 const vehicleRecord = new Records();
-vehicleRecord.enter("LEO-1015", "Bike");
-vehicleRecord.enter("LEO-1015", "Bike");
-vehicleRecord.enter("LEX-7749", "Car");
+vehicleRecord.enter("LEO-1015", "Bike"); // Bike Enter
+vehicleRecord.enter("LEO-1015", "Bike"); // To Check Duplicate Entry Working
+vehicleRecord.enter("LEX-7749", "Car");  // Car Enter 
 console.log(vehicleRecord.listRecords());
 
-vehicleRecord.reportTicketLost("LEO-1015");
+vehicleRecord.reportTicketLost("LEO-1015"); // To Check Lost Ticket Report Working
 // vehicleRecord.reportTicketLost("LEX 7749");
-vehicleRecord.exit("LEO-1015");
-vehicleRecord.exit("LEX-7749");
-vehicleRecord.exit("ABC-1234");
+vehicleRecord.exit("LEO-1015", "Bike"); // Bike Exit
+vehicleRecord.exit("LEX-7749", "Car");  // Car Exit
+vehicleRecord.exit("ABC-1234", "Rickshaw"); // Non-existing Vehicle Exit
 console.log("********RECORDS********");
-console.log(vehicleRecord.listRecords());
+console.log(vehicleRecord.listRecords()); 
 console.log("********SUMMARY********");
-console.log(vehicleRecord.listSummary());
+console.log(vehicleRecord.listSummary()); // Summary Report
 // console.log("********TRANSACTION HISTORY********");
 // console.log(vehicleRecord.listHistory());
 
