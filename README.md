@@ -16,6 +16,7 @@ To get started with this project:
 
 The user can also report ticket lost using the reportTicketLost() method.
 
-#### Note:  The testing.js file is only for testing chunks of during development. All the code of working project in inside vehicleEntry.js
+#### Note:  The testing.js file is only for testing chunks of during development. All the code of working project in inside vehicleEntry.js. The exit time is created when the vehicle exits. For testing purposes inside the code the exit time is set to 27/02/2026 12:00pm. Change it according to your need.
+
 
 
