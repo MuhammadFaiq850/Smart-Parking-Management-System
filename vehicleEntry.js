@@ -4,7 +4,7 @@ class Records {
 
     let summary = {
       totalVehiclesParked: 0,
-      vehiclesParked: { Bike: 0, Car: 0, Truck: 0 },
+      vehiclesParked: null,
       totalRevenue: 0,
       revenuePerVehicle: null,
       allViolations: [],
@@ -32,18 +32,17 @@ class Records {
 
     //Enter Vehicle
     this.enter = (plate_no, vehicle_type) => {
-        // Check for Duplicate Entry
+      // Check for Duplicate Entry
       if (
         records.some(
           (curr) => curr.plate_no == plate_no && curr.currently_parked,
         )
       ) {
         summary.allViolations.push(`Duplicate Entry Violation: ${plate_no}`);
-      } 
-      else {
+      } else {
         createRecord(plate_no, vehicle_type);
         const calculated = calculateVehicles();
-        updateSummary(calculated);
+        updateSummaryOnEntry(calculated);
       }
     };
 
@@ -72,6 +71,7 @@ class Records {
 
             summary.revenuePerVehicle = revenuePerVehicle(); // Update revenue per vehicle in summary
             summary.totalRevenue = calculateRevenue(); //Update total revenue in summary
+            summary.totalVehiclesParked -= 1;
           }
         });
       }
@@ -104,55 +104,62 @@ class Records {
       return totalRevenue;
     }
 
+    //Revenue Per Vehicle Category
     function revenuePerVehicle() {
-      // add this function after exit
-      let vehicleRevenue = {
-        bikesRevenue: 0,
-        carsRevenue: 0,
-        trucksRevenue: 0,
-      };
-      const Bikes = records.filter((record) => record.vehicle_type == "Bike");
-      const Cars = records.filter((record) => record.vehicle_type == "Car");
-      const Trucks = records.filter((record) => record.vehicle_type == "Truck");
+      let vehicleRevenue = vehicles.reduce((acc, curr) => {
+        acc[curr] = 0;
+        return acc;
+      }, {});
 
-      vehicleRevenue.bikesRevenue = Bikes.reduce((acc, curr) => {
-        return acc + curr.fee + curr.ticketViolationFee;
-      }, 0);
-      vehicleRevenue.carsRevenue = Cars.reduce((acc, curr) => {
-        return acc + curr.fee + curr.ticketViolationFee;
-      }, 0);
-      vehicleRevenue.trucksRevenue = Trucks.reduce((acc, curr) => {
-        return acc + curr.fee + curr.ticketViolationFee;
-      }, 0);
+      for (const vehicle of Object.keys(vehicleRevenue)) {
+        vehicleRevenue[vehicle] = records
+          .filter((record) => record.vehicle_type == vehicle)
+          .reduce((acc, curr) => {
+            return acc + curr.fee + curr.ticketViolationFee;
+          }, 0);
+      }
       return vehicleRevenue;
     }
 
     //Vehicle Calculation
     function calculateVehicles() {
-      let vehicles = { bike: 0, car: 0, truck: 0, totalVehiclesParked: 0 };
-      records.forEach((record) => {
-        record.vehicle_type == "Bike" && record.currently_parked
-          ? ++vehicles.bike
-          : vehicles.bike + 0;
-        record.vehicle_type == "Car" && record.currently_parked
-          ? ++vehicles.car
-          : vehicles.car + 0;
-        record.vehicle_type == "Truck" && record.currently_parked
-          ? ++vehicles.truck
-          : vehicles.truck + 0;
-      });
-      vehicles.totalVehiclesParked =
-        vehicles.bike + vehicles.car + vehicles.truck;
-      return vehicles;
+      let parkredVehicleCount = vehicles.reduce((acc, curr) => {
+        acc[curr] = 0;
+        return acc;
+      }, {});
+
+      for (const x of Object.keys(parkredVehicleCount)) {
+        records.forEach((record) => {
+          record.vehicle_type == x && record.currently_parked
+            ? ++parkredVehicleCount[x]
+            : parkredVehicleCount[x] + 0;
+        });
+      }
+
+      const totalVehiclesParked = Object.entries(parkredVehicleCount).reduce(
+        (acc, curr) => {
+          return acc + curr[1];
+        },
+        0,
+      );
+      return [totalVehiclesParked, parkredVehicleCount];
     }
 
     // Update Summary
 
-    function updateSummary(vehicles) {
-      summary.totalVehiclesParked = vehicles.totalVehiclesParked;
-      summary.vehiclesParked.Bike = vehicles.bike;
-      summary.vehiclesParked.Car = vehicles.car;
-      summary.vehiclesParked.Truck = vehicles.truck;
+    function updateSummaryOnEntry(vehicleCount) {
+      console.log(vehicleCount);
+      summary.totalVehiclesParked = vehicleCount[0];
+      let vehiclesParked = vehicles.reduce((acc, curr) => {
+        acc[curr] = 0;
+        return acc;
+      }, {});
+
+      for (const x of Object.keys(vehiclesParked)) {
+        vehiclesParked[x] = vehicleCount[1][x];
+      }
+
+      summary.vehiclesParked = vehiclesParked;
     }
 
     //Create record for Vehicle entry
@@ -176,20 +183,21 @@ class Records {
       return records;
     };
 
+    //List all Transaction History
+    this.listHistory = function () {
+      return records;
+    };
+
     // List Summary
     this.listSummary = function () {
       return summary;
     };
 
-    function receiptGeneration(vehicle, rules) {
+    // Generate receipt for vehicle exit
+    function receiptGeneration(vehicle_data, rules) {
       //Destructuring vehicle and rules
-      const { plate_no, entry_time, exit_time, vehicle_type } = vehicle;
-      const {
-        lostTicketFine,
-        graceMinutes,
-        hourlyRates: { Car: car_rate, Bike: bike_rate, Truck: truck_rate },
-        dailyCaps: { Car: car_cap, Bike: bike_cap, Truck: truck_cap },
-      } = rules;
+      const { plate_no, entry_time, exit_time, vehicle_type } = vehicle_data;
+      const { graceMinutes } = rules;
 
       //Calculating Duration
       const totalDuration_m = Math.round(
@@ -201,30 +209,13 @@ class Records {
 
       // Calculating Final fee with grace minutes and price cap
       const bill = (vehicle_type, totalDuration) => {
-        if (vehicle_type == "Bike") {
-          //Bike total fee with grace minutes and price cap
-          const bike_bill =
-            totalDuration[1] <= graceMinutes
-              ? bike_rate * totalDuration[0]
-              : bike_rate * (totalDuration[0] + 1);
-          return bike_bill > bike_cap ? bike_cap : bike_bill;
-
-          //Car total fee with grace minutes and price cap
-        } else if (vehicle_type == "Car") {
-          const car_bill =
-            totalDuration[1] <= 15
-              ? car_rate * totalDuration[0]
-              : car_rate * (totalDuration[0] + 1);
-          return car_bill > car_cap ? car_cap : car_bill;
-
-          //Truck total fee with grace minutes and price cap
-        } else if (vehicle_type == "Truck") {
-          const truck_bill =
-            totalDuration[1] <= 15
-              ? truck_rate * totalDuration[0]
-              : truck_rate * (totalDuration[0] + 1);
-          return truck_bill > truck_cap ? truck_cap : truck_bill;
-        }
+        const V_bill =
+          totalDuration[1] <= graceMinutes
+            ? rules.hourlyRates[vehicle_type] * totalDuration[0]
+            : rules.hourlyRates[vehicle_type] * (totalDuration[0] + 1);
+        return V_bill > rules.dailyCaps[vehicle_type]
+          ? rules.dailyCaps[vehicle_type]
+          : V_bill;
       };
       const final_fee = bill(vehicle_type, totalDuration);
 
@@ -258,6 +249,8 @@ console.log("********RECORDS********");
 console.log(vehicleRecord.listRecords());
 console.log("********SUMMARY********");
 console.log(vehicleRecord.listSummary());
+// console.log("********TRANSACTION HISTORY********");
+// console.log(vehicleRecord.listHistory());
 
 // const vehicle = {
 //   plate_no: "LEO1015",
