@@ -27,6 +27,9 @@ class Records {
       },
     };
 
+    // List of all Vehicle Categories
+    const vehicles = Object.keys(rules.hourlyRates);
+
     //Enter Vehicle
     this.enter = (plate_no, vehicle_type) => {
         // Check for Duplicate Entry
