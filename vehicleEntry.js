@@ -254,12 +254,4 @@ console.log(vehicleRecord.listSummary()); // Summary Report
 // console.log("********TRANSACTION HISTORY********");
 // console.log(vehicleRecord.listHistory());
 
-// const vehicle = {
-//   plate_no: "LEO1015",
-//   vehicle_type: "Bike",
-//   // entry_time: +new Date(2026, 1, 26, 6, 44),
-//   entry_time: +new Date(),
-//   exit_time: +new Date(2026, 1, 26, 12, 0),
-//   currently_parked: true,
-//   // total_revenue: 0,
-// };
+
